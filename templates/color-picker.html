@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Color Picker</title>
+    <style>
+        body {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: #f8f8f8;
+        }
+
+        .drop-zone {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            width: 80vw;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone.dragover {
+            background-color: #f0f0f0;
+        }
+
+        #colorValue {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 70vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="dropZone" class="drop-zone">
+        <h1>Drop an image here</h1>
+        <canvas id="canvas"></canvas>
+        <form id="uploadForm" style="display: none;">
+            <input id="fileInput" type="file" accept="image/*" />
+        </form>
+    </div>
+    <div id="colorValue">Color Hex Value: #FFFFFF</div>
+
+    <script>
+        let dropZone = document.getElementById("dropZone");
+        let fileInput = document.getElementById("fileInput");
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext('2d');
+        let colorValue = document.getElementById("colorValue");
+
+        dropZone.addEventListener("click", function (e) {
+            if (e.target === dropZone) {
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener("change", function () {
+            if (fileInput.files.length > 0) {
+                loadAndDrawImage(fileInput.files[0]);
+            }
+        });
+
+        dropZone.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            this.classList.add("dragover");
+        });
+
+        dropZone.addEventListener("dragleave", function (e) {
+            this.classList.remove("dragover");
+        });
+
+        dropZone.addEventListener("drop", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove("dragover");
+
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                loadAndDrawImage(fileInput.files[0]);
+            }
+        });
+
+        function loadAndDrawImage(file) {
+            let reader = new FileReader();
+            reader.onload = function (e) {
+                let img = new Image();
+                img.onload = function () {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        canvas.addEventListener('mousemove', function (e) {
+            let x = e.offsetX;
+            let y = e.offsetY;
+            let pixel = ctx.getImageData(x, y, 1, 1);
+            let data = pixel.data;
+            let hex = "#" + ((1 << 24) + (data[0] << 16) + (data[1] << 8) + data[2]).toString(16).slice(1);
+            colorValue.textContent = "Color Hex Value: " + hex;
+        });
+    </script>
+</body>
+</html>
